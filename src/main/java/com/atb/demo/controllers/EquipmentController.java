@@ -1,11 +1,10 @@
 package com.atb.demo.controllers;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,53 +15,60 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.atb.demo.models.Equipment;
-import com.atb.demo.services.EquipementRepository;
+import com.atb.demo.repository.EquipementRepository;
 
-
-@Controller
-@CrossOrigin("*")
 @RestController
 @RequestMapping("/api/equipments")
 public class EquipmentController {
 
     @Autowired
-    private EquipementRepository EquipementRepository;
+    private EquipementRepository equipementRepository;
 
-    // Create operation
     @PostMapping("/")
-    public Equipment createEquipment(@RequestBody Equipment equipment) {
-        return EquipementRepository.save(equipment);
+    public ResponseEntity<Equipment> createEquipment(@RequestBody Equipment equipment) {
+        Equipment createdEquipment = equipementRepository.save(equipment);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdEquipment);
     }
 
-    // Read operation
     @GetMapping("/")
-    public List<Equipment> getAllEquipments() {
-        return EquipementRepository.findAll();
+    public ResponseEntity<List<Equipment>> getAllEquipments() {
+        List<Equipment> equipments = equipementRepository.findAll();
+        return ResponseEntity.ok().body(equipments);
     }
 
     @GetMapping("/{id}")
-    public Optional<Equipment> getEquipmentById(@PathVariable int id) {
-        return EquipementRepository.findById(id);
+    public ResponseEntity<Equipment> getEquipmentById(@PathVariable int id) {
+        Equipment equipment = equipementRepository.findById(id).orElse(null);
+        if (equipment != null) {
+            return ResponseEntity.ok().body(equipment);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
-    // Update operation
     @PutMapping("/{id}")
-    public Equipment updateEquipment(@PathVariable int id, @RequestBody Equipment updatedEquipment) {
-        Equipment existingEquipment = EquipementRepository.findById(id).orElse(null);
+    public ResponseEntity<Equipment> updateEquipment(@PathVariable int id, @RequestBody Equipment updatedEquipment) {
+        Equipment existingEquipment = equipementRepository.findById(id).orElse(null);
         if (existingEquipment != null) {
             existingEquipment.setName(updatedEquipment.getName());
             existingEquipment.setCategory(updatedEquipment.getCategory());
             existingEquipment.setEntree(updatedEquipment.getEntree());
             existingEquipment.setSortie(updatedEquipment.getSortie());
-            return EquipementRepository.save(existingEquipment);
+            Equipment updated = equipementRepository.save(existingEquipment);
+            return ResponseEntity.ok().body(updated);
+        } else {
+            return ResponseEntity.notFound().build();
         }
-        return null;
     }
 
-    // Delete operation
     @DeleteMapping("/{id}")
-    public String deleteEquipment(@PathVariable int id) {
-        EquipementRepository.deleteById(id);
-        return "Equipment deleted with ID: " + id;
+    public ResponseEntity<String> deleteEquipment(@PathVariable int id) {
+        Equipment equipment = equipementRepository.findById(id).orElse(null);
+        if (equipment != null) {
+            equipementRepository.deleteById(id);
+            return ResponseEntity.ok().body("Equipment deleted with ID: " + id);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

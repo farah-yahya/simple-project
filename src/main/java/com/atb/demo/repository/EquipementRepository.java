@@ -1,4 +1,4 @@
-package com.atb.demo.services;
+package com.atb.demo.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
